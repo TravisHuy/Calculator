@@ -22,34 +22,50 @@ public class CalculatorPresenter {
 
     public void evaluate(String formula){
         try{
-            String parts[] =formula.split(" ");
-            if(parts.length<3){
+            formula=formula.replaceAll("\\s+","");
+            if(formula.isEmpty()){
                 view.showError("Invalid input");
                 return;
             }
-            double a=Double.parseDouble(parts[0]);
-            String operator=parts[1];
-            double b=Double.parseDouble(parts[2]);
+
+            if(formula.startsWith("-")||formula.startsWith("+")){
+                formula="0"+formula;
+            }
+
+            String[] parts=formula.split("(?=[-+*/])|(?<=[-+*/])");
 
             double result=0;
 
-            switch (operator){
-                case "+":
-                    result=calculator.add(a,b);
-                    break;
-                case "-":
-                    result=calculator.subtract(a,b);
-                    break;
-                case "*":
-                    result= calculator.multiply(a,b);
-                    break;
-                case "/":
-                    result=calculator.divide(a,b);
-                    break;
-                default:
-                    view.showError("Unknown operator");
-                    return;
+            if(parts.length>0){
+                result=Double.parseDouble(parts[0]);
             }
+
+            for(int i=1;i<parts.length;i+=2){
+                String operator=parts[i];
+                double operand=Double.parseDouble(parts[i+1]);
+                switch (operator){
+                    case "+":
+                        result=calculator.add(result,operand);
+                        break;
+                    case "-":
+                        result=calculator.subtract(result,operand);
+                        break;
+                    case "*":
+                        result= calculator.multiply(result,operand);
+                        break;
+                    case "/":
+                        if(operand==0){
+                            view.showError("division by zero");
+                            return;
+                        }
+                        result=calculator.divide(result,operand);
+                        break;
+                    default:
+                        view.showError("Unknown operator");
+                        return;
+                }
+            }
+            view.showResult(Double.parseDouble(String.valueOf(result)));
         }
         catch (NumberFormatException e){
             view.showError("Invalid number format");
